@@ -2,7 +2,7 @@ import streamlit as st
 
 st.title("Event Check-in and Label Printing")
 
-@st.experimental_route('/checkin/', methods=['POST'])  # Let op de aangepaste route
+@st.experimental_connection('/checkin/', methods=['POST'])  # Let op de aangepaste route
 def handle_checkin():
     data = st.json()
     action = data.get('action', '')
