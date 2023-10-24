@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Print Label</title>
+<script src="https://github.com/dymosoftware/dymo-connect-framework/releases/download/v1.3.2/dymo.connect.framework.js"></script>
+<script>
+  window.onload = async () => {
+    try {
+      const labelXml = '...'  // Vul hier je .label-bestandsinhoud in.
+      const data = window.data || {};  // Verkrijg de data doorgegeven door je server.
+      const label = dymo.label.framework.openLabelXml(labelXml);
+
+      label.setObjectText('FirstName', data.fname || '');
+      label.setObjectText('LastName', data.lname || '');
+      label.setObjectText('Company', data.company || '');
+
+      const printers = await dymo.label.framework.getPrintersAsync();
+      const printerName = printers[0].name;
+      label.print(printerName);
+    } catch (error) {
+      console.error('Er is een fout opgetreden bij het printen van het label:', error);
+    }
+  };
+</script>
+</head>
+<body>
+</body>
+</html>
