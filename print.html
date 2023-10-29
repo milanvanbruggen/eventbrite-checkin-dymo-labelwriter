@@ -1,29 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Print Label</title>
-<script src="https://github.com/dymosoftware/dymo-connect-framework/releases/download/v1.3.2/dymo.connect.framework.js"></script>
-<script>
-  window.onload = async () => {
-    try {
-      const labelXml = '...'  // Vul hier je .label-bestandsinhoud in.
-      const data = window.data || {};  // Verkrijg de data doorgegeven door je server.
-      const label = dymo.label.framework.openLabelXml(labelXml);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <title>Print Label</title>
+    <script type="text/javascript" src="/includes/dymo.connect.framework.js"></script>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Document loaded');
 
-      label.setObjectText('FirstName', data.fname || '');
-      label.setObjectText('LastName', data.lname || '');
-      label.setObjectText('Company', data.company || '');
+            // Haal de parameters op uit de URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const fname = urlParams.get('fname');
+            const lname = urlParams.get('lname');
+            const company = urlParams.get('company');
 
-      const printers = await dymo.label.framework.getPrintersAsync();
-      const printerName = printers[0].name;
-      label.print(printerName);
-    } catch (error) {
-      console.error('Er is een fout opgetreden bij het printen van het label:', error);
-    }
-  };
-</script>
+            // Initialiseer het DYMO-framework en controleer de omgeving
+            dymo.label.framework.init(function() {
+                console.log('DYMO framework initialized');
+
+                const isEnvironmentValid = dymo.label.framework.checkEnvironment();
+                if (isEnvironmentValid) {
+                    console.log('Environment is valid');
+                    printLabel();  // Roep de printLabel functie aan
+                } else {
+                    console.error('Environment is not valid for DYMO framework');
+                }
+            });
+
+            function printLabel() {
+                const labelXml = `
+    <DieCutLabel Version="8.0" Units="twips">
+        <PaperOrientation>Landscape</PaperOrientation>
+        <Id>Event Label</Id>
+        <PaperName>30252 Address</PaperName>
+        <DrawCommands>
+            <RoundRectangle X="0" Y="0" Width="1581" Height="5040" Rx="270" Ry="270" />
+        </DrawCommands>
+        <ObjectInfo>
+            <AddressObject>
+                <Name>Address</Name>
+                <ForeColor Alpha="255" Red="0" Green="0" Blue="0" />
+                <BackColor Alpha="0" Red="255" Green="255" Blue="255" />
+                <LinkedObjectName></LinkedObjectName>
+                <Rotation>Rotation0</Rotation>
+                <IsMirrored>False</IsMirrored>
+                <IsVariable>True</IsVariable>
+                <HorizontalAlignment>Left</HorizontalAlignment>
+                <VerticalAlignment>Middle</VerticalAlignment>
+                <TextFitMode>ShrinkToFit</TextFitMode>
+                <UseFullFontHeight>True</UseFullFontHeight>
+                <Verticalized>False</Verticalized>
+                <StyledText>
+                    <Element>
+                        <String>${fname} ${lname}\n${company}</String>
+                        <Attributes>
+                            <Font Family="Arial" Size="12" Bold="False" Italic="False" Underline="False" Strikeout="False" />
+                            <ForeColor Alpha="255" Red="0" Green="0" Blue="0" />
+                        </Attributes>
+                    </Element>
+                </StyledText>
+                <ShowBarcodeFor9DigitZipOnly>False</ShowBarcodeFor9DigitZipOnly>
+                <BarcodePosition>AboveAddress</BarcodePosition>
+                <LineFonts>
+                    <Font Family="Arial" Size="12" Bold="False" Italic="False" Underline="False" Strikeout="False" />
+                    <Font Family="Arial" Size="12" Bold="False" Italic="False" Underline="False" Strikeout="False" />
+                    <Font Family="Arial" Size="12" Bold="False" Italic="False" Underline="False" Strikeout="False" />
+                </LineFonts>
+            </AddressObject>
+            <Bounds X="332" Y="150" Width="4455" Height="1260" />
+        </ObjectInfo>
+    </DieCutLabel>
+                `;
+
+                // Laad het label
+                const label = dymo.label.framework.openLabelXml(labelXml);
+                if (!label) {
+                    console.error('Failed to open label');
+                    return;
+                }
+                console.log('Label opened successfully');
+
+                // Haal de lijst met beschikbare printers op
+                const printers = dymo.label.framework.getPrinters();
+                console.log('Available printers:', printers);
+
+                if (printers.length === 0) {
+                    console.error('No DYMO printers are installed. Install DYMO printers.');
+                    return;
+                }
+
+                // Controleer op een LabelWriter-printer
+                let printerName = '';
+                for (let i = 0; i < printers.length; ++i) {
+                    const printer = printers[i];
+                    if (printer.printerType === 'LabelWriterPrinter') {
+                        printerName = printer.name;
+                        break;
+                    }
+                }
+
+                if (printerName === '') {
+                    console.error('No LabelWriter printers found. Install LabelWriter printer');
+                    return;
+                }
+                console.log('LabelWriter printer found:', printerName);
+
+                // Print het label
+                try {
+                    label.print(printerName);
+                    console.log('Label printed successfully');
+                } catch (error) {
+                    console.error('Failed to print label:', error);
+                }
+            }
+        });
+    </script>
 </head>
 <body>
 </body>
