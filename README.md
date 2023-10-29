@@ -16,7 +16,7 @@ We use ngrok to make the app public.
 ## Start Node.js app
 ```
 node server.mjs
-
+```
 
 ## Check Eventbrite event and call app
 You need to do this first, before being able to use this application.
